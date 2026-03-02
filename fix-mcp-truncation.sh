@@ -39,6 +39,9 @@ echo "Patching: $SDK_FILE"
 
 # The pattern to find (success path with truncated textResultForLlm)
 OLD='{textResultForLlm:a,binaryResultsForLlm:s,resultType:"success",sessionLog:a,toolTelemetry:i,contents:r}'
+# Use o (full filtered content) instead of a (truncated to 10KB) for
+# textResultForLlm so the downstream large-output handler sees the real size.
+# o||"" mirrors the original guard (a=o?c0(o,"output"):"") for empty content.
 NEW='{textResultForLlm:o||"",binaryResultsForLlm:s,resultType:"success",sessionLog:a,toolTelemetry:i,contents:r}'
 
 if grep -qF "$NEW" "$SDK_FILE"; then
@@ -56,7 +59,12 @@ fi
 # Apply the one-line fix: use the full (filtered) content for textResultForLlm
 # in the success path so the downstream large-output handler can detect it and
 # save to a temp file when the response exceeds 30KB.
-sed -i "s@$OLD@$NEW@" "$SDK_FILE"
+# macOS (BSD) sed requires a backup extension with -i; GNU sed does not.
+if sed --version >/dev/null 2>&1; then
+  sed -i "s@$OLD@$NEW@" "$SDK_FILE"
+else
+  sed -i '' "s@$OLD@$NEW@" "$SDK_FILE"
+fi
 
 if grep -qF "$NEW" "$SDK_FILE"; then
   echo "✓ Patch applied successfully."
