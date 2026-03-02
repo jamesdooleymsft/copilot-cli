@@ -1,5 +1,6 @@
 ## 0.0.420 - 2026-02-27
 
+- Fix MCP tool responses larger than 10KB being silently truncated before the large-output-to-file handler can save them (see fix-mcp-truncation.sh for a workaround on current installs)
 - Auto-update now also updates the binary executable, not just the JS package
 - Plugin and marketplace git repos update correctly after force-pushes and tag-based installs
 - 502 bad gateway errors are retried automatically and no longer crash the session with raw HTML output
